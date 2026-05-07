@@ -18,7 +18,7 @@ async function shareLocation() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
 
-            const response = await fetch("https://track-hhek.onrender.com", {
+            const response = await fetch("https://track-hhek.onrender.com/location", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
