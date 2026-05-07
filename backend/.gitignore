@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+ENV/
+tk/
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment Variables
+.env
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# JSON Database Files
+locations.json
+
+# Node Modules (if React/Vite later)
+node_modules/
+
+# Build folders
+dist/
+build/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Pytest cache
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Render / Deployment
+*.sqlite3
