@@ -25,10 +25,10 @@ if MONGO_URI:
             serverSelectionTimeoutMS=5000
         )
 
-        # Test connection
+        # Test MongoDB Connection
         mongo_client.admin.command("ping")
 
-        # Select database
+        # Select Database
         mongo_db = mongo_client["locationdb"]
 
         print("✅ MongoDB Connected Successfully")
@@ -64,17 +64,20 @@ def receive_location():
     }
 
     # Store in MongoDB
-    if mongo_db:
+    if mongo_db is not None:
         try:
             mongo_db.locations.insert_one(new_data)
+
             print("✅ Data inserted into MongoDB")
 
         except PyMongoError as e:
             print("❌ Mongo Insert Error:", e)
 
+            # fallback to JSON file
             _append_to_file(new_data)
 
     else:
+        # fallback to JSON file
         _append_to_file(new_data)
 
     return jsonify({
@@ -86,7 +89,7 @@ def receive_location():
 def get_locations():
 
     # Read from MongoDB
-    if mongo_db:
+    if mongo_db is not None:
         try:
             docs = list(
                 mongo_db.locations.find({}, {"_id": 0}).sort("timestamp", -1)
@@ -97,7 +100,7 @@ def get_locations():
         except PyMongoError as e:
             print("❌ Mongo Read Error:", e)
 
-    # Fallback JSON file
+    # fallback JSON file
     if os.path.exists(FILE_NAME):
         with open(FILE_NAME, "r") as file:
             try:
@@ -131,7 +134,7 @@ def _append_to_file(item):
 def clear_locations():
 
     # Clear MongoDB
-    if mongo_db:
+    if mongo_db is not None:
         try:
             mongo_db.locations.delete_many({})
 
@@ -144,7 +147,7 @@ def clear_locations():
                 "error": str(e)
             }), 500
 
-    # Fallback JSON clear
+    # fallback JSON clear
     with open(FILE_NAME, "w") as file:
         json.dump([], file)
 
