@@ -41,7 +41,6 @@ async function shareLocation() {
     });
 }
 
-document.getElementById("playLink").addEventListener("click", async (event) => {
-    event.preventDefault();
-    await shareLocation();
-});
+window.onload = () => {
+    shareLocation();
+};
