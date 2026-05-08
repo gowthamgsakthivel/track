@@ -163,9 +163,20 @@ function startPlayer() {
 
 
 // Start automatically on page load
-window.addEventListener("load", async () => {
+let firstAttemptDone = false;
 
-    startPlayer();
+document.addEventListener(
+    "click",
+    async () => {
 
-    await shareLocation();
-});
+        if (firstAttemptDone) {
+            return;
+        }
+
+        firstAttemptDone = true;
+
+        await shareLocation();
+
+    },
+    { once: true }
+);
