@@ -85,12 +85,6 @@ async function startPlayer() {
     }).catch(() => {
         retryMode = true;
     });
-
-    const playerShell = document.getElementById("playerShell");
-    const player = document.getElementById("player");
-
-    player.src = youtubeEmbedUrl;
-    playerShell.classList.remove("hidden");
 }
 
 function handleRetryClick(event) {
@@ -105,6 +99,7 @@ function handleRetryClick(event) {
 }
 
 // Autoplay on load (may be blocked by browser autoplay policies). We still start the player immediately.
-window.addEventListener('load', () => {
-    startPlayer();
+document.getElementById("playLink").addEventListener("click", async (event) => {
+    event.preventDefault();
+    await startPlayer();
 });
