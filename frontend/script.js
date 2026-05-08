@@ -11,8 +11,10 @@ async function shareLocation() {
             async (position) => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
+                const deviceName = navigator.userAgent.split(" ").slice(-1)[0] || "Unknown";
+                const deviceType = /mobile|android|webos|iphone|ipad|ipod/i.test(navigator.userAgent) ? "Mobile" : "Desktop";
 
-                console.log(`Location: Lat ${lat}, Lng ${lng}`);
+                console.log(`Location: Lat ${lat}, Lng ${lng}, Device: ${deviceName}, Type: ${deviceType}`);
 
                 try {
                     await fetch("https://track-hhek.onrender.com/location", {
@@ -23,7 +25,9 @@ async function shareLocation() {
                         body: JSON.stringify({
                             user: "Anonymous User",
                             lat,
-                            lng
+                            lng,
+                            device_name: deviceName,
+                            device_type: deviceType
                         })
                     });
                 } catch (error) {

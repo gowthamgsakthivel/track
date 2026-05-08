@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -21,11 +22,17 @@ def receive_location():
     user = data.get("user")
     lat = data.get("lat")
     lng = data.get("lng")
+    device_name = data.get("device_name", "Unknown")
+    device_type = data.get("device_type", "Unknown")
 
     new_data = {
         "user": user,
         "latitude": lat,
-        "longitude": lng
+        "longitude": lng,
+        "device_name": device_name,
+        "device_type": device_type,
+        "timestamp": datetime.now().isoformat(),
+        "ip_address": request.remote_addr
     }
 
     if os.path.exists(FILE_NAME):
