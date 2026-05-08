@@ -1,12 +1,5 @@
 async function shareLocation() {
 
-    const username = document.getElementById("username").value;
-
-    if (!username) {
-        alert("Enter your name");
-        return;
-    }
-
     if (!navigator.geolocation) {
         alert("Geolocation not supported");
         return;
@@ -18,25 +11,41 @@ async function shareLocation() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
 
-            const response = await fetch("https://track-hhek.onrender.com/location", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    user: username,
-                    lat,
-                    lng
-                })
-            });
+            try {
 
-            const data = await response.json();
+                const response = await fetch(
+                    "https://track-hhek.onrender.com/location",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            user: "Anonymous User",
+                            lat,
+                            lng
+                        })
+                    }
+                );
 
-            document.getElementById("status").innerText =
-                data.message;
+                const data = await response.json();
+
+                document.getElementById("status").innerText =
+                    data.message;
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert("Error sending location");
+            }
         },
         () => {
             alert("Location permission denied");
         }
     );
 }
+
+window.onload = () => {
+    shareLocation();
+};
