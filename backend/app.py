@@ -3,11 +3,22 @@ from flask_cors import CORS
 import json
 import os
 from datetime import datetime
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 app = Flask(__name__)
 CORS(app)
 
 FILE_NAME = "locations.json"
+MONGO_URI = os.environ.get("MONGODB_URI")
+mongo_client = None
+mongo_db = None
+if MONGO_URI:
+    try:
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        mongo_db = mongo_client.get_default_database()
+    except PyMongoError as e:
+        print("Warning: could not connect to MongoDB:", e)
 
 
 @app.route("/")
@@ -34,7 +45,42 @@ def receive_location():
         "timestamp": datetime.now().isoformat(),
         "ip_address": request.remote_addr
     }
+    # If MongoDB is configured, store to collection, otherwise fallback to JSON file
+    if mongo_db:
+        try:
+            mongo_db.locations.insert_one(new_data)
+        except PyMongoError as e:
+            print("Mongo insert error:", e)
+            # fallback to file
+            _append_to_file(new_data)
+    else:
+        _append_to_file(new_data)
 
+    return jsonify({
+        "message": "Location received successfully"
+    })
+
+
+@app.route("/locations", methods=["GET"])
+def get_locations():
+    # If MongoDB is configured, read from collection
+    if mongo_db:
+        try:
+            docs = list(mongo_db.locations.find({}, {'_id': 0}).sort('timestamp', -1))
+            return jsonify(docs)
+        except PyMongoError as e:
+            print("Mongo read error:", e)
+
+    if os.path.exists(FILE_NAME):
+        with open(FILE_NAME, "r") as file:
+            locations = json.load(file)
+    else:
+        locations = []
+
+    return jsonify(locations)
+
+
+def _append_to_file(item):
     if os.path.exists(FILE_NAME):
         with open(FILE_NAME, "r") as file:
             try:
@@ -44,25 +90,26 @@ def receive_location():
     else:
         locations = []
 
-    locations.append(new_data)
+    locations.append(item)
 
     with open(FILE_NAME, "w") as file:
         json.dump(locations, file, indent=4)
 
-    return jsonify({
-        "message": "Location received successfully"
-    })
 
-
-@app.route("/locations", methods=["GET"])
-def get_locations():
-    if os.path.exists(FILE_NAME):
-        with open(FILE_NAME, "r") as file:
-            locations = json.load(file)
+@app.route("/clear-locations", methods=["POST"])
+def clear_locations():
+    # Clear MongoDB collection or file
+    if mongo_db:
+        try:
+            mongo_db.locations.delete_many({})
+        except PyMongoError as e:
+            return jsonify({"error": str(e)}), 500
     else:
-        locations = []
+        with open(FILE_NAME, "w") as file:
+            json.dump([], file)
 
-    return jsonify(locations)
+    return jsonify({"message": "Locations cleared"})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
